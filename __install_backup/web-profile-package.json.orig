@@ -1,0 +1,22 @@
+{
+  "name": "dsh-profile-web",
+  "private": true,
+  "dependencies": {
+    "@cocofhu/skillhub": "^0.2.16",
+    "@linxin666/dsh-remote-web-ui": "0.4.15",
+    "dsh-xdpool": "^2.5.0",
+    "dshmarket": "^1.73.10"
+  },
+  "dsh": {
+    "profile": {
+      "bundles": [
+        "@deepseek-ai/dsh-base",
+        "@deepseek-ai/dsh-web-app",
+        "dsh-xdpool",
+        "@cocofhu/skillhub",
+        "dshmarket",
+        "@linxin666/dsh-remote-web-ui"
+      ]
+    }
+  }
+}

@@ -1,0 +1,7 @@
+# DSH bundle patch for dsh-sleep-tracker.
+# One row mounts the package; package.json simultaneously declares `dsh.host`
+# (Node half: persistence + RPC) and `dsh.client` (browser half: calendar UI),
+# so a single entry activates both halves.
+- insert:
+  - id: dsh-sleep-tracker
+    name: 'dsh-sleep-tracker'

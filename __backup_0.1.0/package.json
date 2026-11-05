@@ -1,0 +1,42 @@
+{
+  "name": "dsh-sleep-tracker",
+  "version": "0.1.0",
+  "description": "DSH Web UI 插件：规律作息与睡眠记录（日历 + 课表导入 + 日记 + 深/浅主题）。数据由 Host 侧持久化，Client 经 loopback RPC 读写。",
+  "type": "module",
+  "main": "./src/host.js",
+  "dsh": {
+    "engines": {
+      "dsh": ">=0.2.0"
+    },
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "platform": "web",
+      "immediately": true,
+      "inject": [
+        "@deepseek-ai/dsh-client-ui-slots",
+        "@deepseek-ai/dsh-client-connection",
+        "@deepseek-ai/dsh-client-ui-theme"
+      ]
+    }
+  },
+  "exports": {
+    ".": "./src/host.js",
+    "./client": "./src/client.js",
+    "./package.json": "./package.json"
+  },
+  "keywords": [
+    "dsh",
+    "deepseek-harness",
+    "plugin",
+    "web-ui",
+    "sleep",
+    "sleep-tracker",
+    "作息"
+  ],
+  "license": "MIT",
+  "engines": {
+    "node": ">=18"
+  }
+}
