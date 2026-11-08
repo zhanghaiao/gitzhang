@@ -1,0 +1,42 @@
+{
+  "purpose": "verify the distributable skill zip works after extraction, standalone",
+  "zip": "C:\\Users\\zhang\\WorkBuddy\\2026-10-30-18-36-40\\dsh-plugin-pipeline.skill.zip",
+  "bytes": 92985,
+  "members": 20,
+  "crc_bad": null,
+  "extracted_to": "C:\\Users\\zhang\\WorkBuddy\\2026-10-30-18-36-40\\我的大学梦\\dsh_pipeline_test\\dist_unpack\\dsh-plugin-pipeline",
+  "validator": "Skill is valid!",
+  "bootstrap": {
+    "status": "pass",
+    "name": "dsh-dist-check",
+    "files": 8,
+    "cli": [
+      [
+        "validate",
+        "pass"
+      ]
+    ]
+  },
+  "template_sync": {
+    "status": "pass",
+    "summary": {
+      "same": 8,
+      "total": 8
+    }
+  },
+  "missing": [],
+  "checks": {
+    "zip_crc_ok": true,
+    "members_expected": true,
+    "no_cache_files": true,
+    "frontmatter_complete": true,
+    "required_resources": true,
+    "official_validator": true,
+    "bootstrap_selfcontained": true,
+    "sync_script_runs": true
+  },
+  "summary": {
+    "pass": 8,
+    "total": 8
+  }
+}

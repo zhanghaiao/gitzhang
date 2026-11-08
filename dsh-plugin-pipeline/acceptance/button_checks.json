@@ -1,0 +1,63 @@
+{
+  "purpose": "A1-A8 客观判据复核（替代人工点击的功能验证）",
+  "cases": [
+    {
+      "id": "A1",
+      "method": "static",
+      "result": "PASS",
+      "detail": "UI 元素定义 11/11 存在；缺失=[]；目视观感仍需人工确认"
+    },
+    {
+      "id": "A2",
+      "method": "cli",
+      "result": "PASS",
+      "detail": "status=pass broken=0 desktop/dsh-pipeline healthy=True"
+    },
+    {
+      "id": "A3",
+      "method": "cli",
+      "result": "PASS",
+      "detail": "status=pass stages=['validate'] errors=0"
+    },
+    {
+      "id": "A4",
+      "method": "cli",
+      "result": "PASS",
+      "detail": "status=pass artifact=dsh-pipeline-1.0.0.zip size=24715 CRC=OK files=8"
+    },
+    {
+      "id": "A5",
+      "method": "cli",
+      "result": "PASS",
+      "detail": "status=pass actions=['noop'] backups=['package.json.bak-before-pipeline']"
+    },
+    {
+      "id": "A6",
+      "method": "cli",
+      "result": "PASS",
+      "detail": "status=pass stages=['validate', 'package', 'install'] results=3 errors=0"
+    },
+    {
+      "id": "A7",
+      "method": "node-contract",
+      "result": "PASS",
+      "detail": "空/非字符串/缺失 src 均在 Host buildArgs 层抛出明确错误；面板不白屏属 UI 观感，需目视确认"
+    },
+    {
+      "id": "A8",
+      "method": "cli",
+      "result": "PASS",
+      "detail": "status=pass actions=['noop']（重复执行稳定）"
+    },
+    {
+      "id": "ZERO_SIDE_EFFECT",
+      "method": "hash",
+      "result": "PASS",
+      "detail": "desktop package/lock 哈希不变=True；备份数不变=True"
+    }
+  ],
+  "summary": {
+    "pass": 9,
+    "fail": 0
+  }
+}

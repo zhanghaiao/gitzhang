@@ -1,0 +1,94 @@
+{
+  "phase": "after",
+  "timestamp": "2026-11-08T22:05:03",
+  "verdict": "PASS",
+  "host_started": "2026-11-08 21:30:43",
+  "code_mtime": "2026-11-07 16:48:36",
+  "cases": [
+    {
+      "id": "C1",
+      "title": "宿主已重载最新代码",
+      "status": "PASS",
+      "detail": "宿主启动 2026-11-08 21:30:43 晚于代码/注册最后改动 2026-11-07 16:48:36",
+      "extra": {
+        "pids": [
+          "10872",
+          "20440"
+        ]
+      }
+    },
+    {
+      "id": "C2",
+      "title": "profile 注册完整",
+      "status": "PASS",
+      "detail": "dependencies=link:C:/Users/zhang/WorkBuddy/2026-10-26-22-11-53/dsh-plugin-pipeline | bundles 含插件=True | lock 有记录=True",
+      "extra": {
+        "expected": "link:C:/Users/zhang/WorkBuddy/2026-10-26-22-11-53/dsh-plugin-pipeline",
+        "bundles_tail": [
+          "dsh-context",
+          "dsh-rea",
+          "dsh-pipeline"
+        ]
+      }
+    },
+    {
+      "id": "C3",
+      "title": "链接挂载指向源码且可读",
+      "status": "PASS",
+      "detail": "目标=C:\\Users\\zhang\\WorkBuddy\\2026-10-26-22-11-53\\dsh-plugin-pipeline | 指向源码=True | 必要文件可读=True"
+    },
+    {
+      "id": "C4",
+      "title": "宿主加载器包含该 bundle",
+      "status": "PASS",
+      "detail": "layers=21 | 含 dsh-pipeline=True | 在 skippedBundles=False",
+      "extra": {
+        "layers": 21,
+        "has": true,
+        "skipped": false
+      }
+    },
+    {
+      "id": "C5",
+      "title": "代码与契约一致性",
+      "status": "PASS",
+      "detail": "14 项全通过",
+      "extra": {
+        "两份 CLI 一致": true,
+        "Host 兼容聚合/多段 JSON": true,
+        "Host 校验 src 类型": true,
+        "Client 显式指定产物目录": true,
+        "两端 RPC 通道一致": true,
+        "channel 为单段": true,
+        "Host 返回 DSH 信封": true,
+        "Client 解包 DSH 信封": true,
+        "apply 未立即注销路由": true,
+        "模块级 inject 声明": true,
+        "双路径注册兜底": true,
+        "Host 运行时日志埋点": true,
+        "Python 解释器多重回退": true,
+        "bundle patch id 一致": true
+      }
+    },
+    {
+      "id": "C6",
+      "title": "UI 打包产物",
+      "status": "PASS",
+      "detail": "大小=24715 B | CRC=OK | 缺失文件=无 | 生成于 2026-11-08 21:39:48（宿主启动后=True）",
+      "extra": {
+        "artifact": "C:\\Users\\zhang\\WorkBuddy\\2026-10-26-22-11-53\\dsh-plugin-pipeline\\dist\\dsh-pipeline-1.0.0.zip",
+        "files": 8
+      }
+    },
+    {
+      "id": "C7",
+      "title": "真实 profile 零副作用",
+      "status": "PASS",
+      "detail": "零改动（安装命中 noop）",
+      "extra": {
+        "before": "2026-11-08T19:51:48",
+        "after": "2026-11-08T22:05:03"
+      }
+    }
+  ]
+}

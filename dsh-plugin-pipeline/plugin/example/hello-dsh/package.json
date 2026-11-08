@@ -1,0 +1,16 @@
+{
+  "name": "dsh-hello-dsh",
+  "version": "0.1.0",
+  "description": "DSH 最小示例插件：用于演示插件结构与上线流水线。",
+  "type": "module",
+  "main": "./src/host.js",
+  "dsh": {
+    "engines": { "dsh": ">=0.2.0" },
+    "bundle": { "patch": "./cordis.patch.yml" },
+    "client": { "platform": "web", "immediately": true, "inject": ["@deepseek-ai/dsh-client-ui-slots"] }
+  },
+  "exports": { ".": "./src/host.js", "./client": "./src/client.js", "./package.json": "./package.json" },
+  "scripts": { "selftest": "node ./scripts/selftest.mjs" },
+  "license": "MIT",
+  "engines": { "node": ">=18" }
+}

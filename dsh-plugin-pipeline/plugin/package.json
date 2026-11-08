@@ -1,0 +1,44 @@
+{
+  "name": "dsh-pipeline",
+  "version": "1.0.0",
+  "description": "DSH Web UI 插件：把插件从源码到安装上线的「校验 → 打包 → 安装」全流程固化为一次操作。Host 侧经 loopback RPC 调用本地 CLI，不依赖自定义 HTTP 路由。",
+  "type": "module",
+  "main": "./src/host.js",
+  "dsh": {
+    "engines": {
+      "dsh": ">=0.2.0"
+    },
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "platform": "web",
+      "immediately": true,
+      "inject": [
+        "@deepseek-ai/dsh-client-ui-slots",
+        "@deepseek-ai/dsh-client-connection"
+      ]
+    }
+  },
+  "exports": {
+    ".": "./src/host.js",
+    "./client": "./src/client.js",
+    "./package.json": "./package.json"
+  },
+  "scripts": {
+    "selftest": "node ./scripts/selftest.mjs"
+  },
+  "keywords": [
+    "dsh",
+    "deepseek-harness",
+    "plugin",
+    "pipeline",
+    "validate",
+    "package",
+    "install"
+  ],
+  "license": "MIT",
+  "engines": {
+    "node": ">=18"
+  }
+}

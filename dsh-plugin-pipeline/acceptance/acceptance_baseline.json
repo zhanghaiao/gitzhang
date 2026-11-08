@@ -1,0 +1,38 @@
+{
+  "timestamp": "2026-11-08T19:51:48",
+  "package_sha": "3b02f109c2f591f3e406f5ea8a7a09364f2f20026513fcbfc015f765eab6a6fd",
+  "lock_sha": "9db70e5bd4be1962f59985c382dd140b8a119d42cd29b94f1fb17f52e296a1e2",
+  "backups": [
+    "package.json.bak-before-pipeline"
+  ],
+  "bundles": [
+    "@deepseek-ai/dsh-base",
+    "@deepseek-ai/dsh-web-app",
+    "dsh-xdpool",
+    "dsh-blender",
+    "dsh-better-sidebar",
+    "dshmarket",
+    "dsh-prompt-enhance",
+    "dsh-ppt",
+    "dsh-ops",
+    "dsh-codex-subscription",
+    "dsh-mnemon",
+    "@linxin666/dsh-client-ui-skill-explorer",
+    "@nanmicoder/dsh-agent-teams",
+    "@linxin666/dsh-client-ui-git-graph",
+    "@michengai/dsh-im-connect",
+    "@michengai/dsh-skills-manager",
+    "cc-safety-net",
+    "dsh-our-free-model",
+    "dsh-completed-ding",
+    "dsh-remote",
+    "dsh-claude-style",
+    "dsh-rea-powerpack",
+    "dsh-context",
+    "dsh-rea",
+    "dsh-pipeline"
+  ],
+  "dependency": "link:C:/Users/zhang/WorkBuddy/2026-10-26-22-11-53/dsh-plugin-pipeline",
+  "artifact_exists": false,
+  "artifact_mtime": null
+}

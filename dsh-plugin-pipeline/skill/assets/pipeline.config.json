@@ -1,0 +1,23 @@
+{
+  "manifest": "package.json",
+  "required_fields": ["name", "version", "type", "main", "dsh"],
+  "required_dsh_fields": ["engines", "bundle", "client"],
+  "package_files": [
+    "package.json",
+    "cordis.patch.yml",
+    "README.md",
+    "src/host.js",
+    "src/client.js",
+    "scripts/selftest.mjs"
+  ],
+  "required_package_files": ["package.json", "cordis.patch.yml", "src/host.js"],
+  "package_dirs": ["scripts", "assets"],
+  "exclude_names": [".git", "node_modules", ".DS_Store", "__install_backup", ".workbuddy"],
+  "exclude_prefixes": ["__backup", "."],
+  "profile_root": "~/.dsh/profiles",
+  "default_profile": "desktop",
+  "install_mode": "link",
+  "artifact_dir": "./dist",
+  "register_bundle": true,
+  "update_lockfile": true
+}

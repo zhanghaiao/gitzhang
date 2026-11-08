@@ -1,0 +1,5 @@
+# DSH bundle patch for dsh-pipeline.
+# Host half exposes the loopback RPC channel; Client half registers the panel.
+- insert:
+  - id: dsh-pipeline
+    name: 'dsh-pipeline'

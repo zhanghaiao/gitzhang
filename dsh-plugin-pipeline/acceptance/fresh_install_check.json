@@ -1,0 +1,50 @@
+{
+  "purpose": "from-scratch mount + registration on an isolated profile (no noop)",
+  "isolated_profile": "C:\\Users\\zhang\\WorkBuddy\\2026-10-30-18-36-40\\我的大学梦\\dsh_pipeline_test\\fresh_install\\profiles\\isolated",
+  "bootstrap": {
+    "status": "pass",
+    "src": "C:\\Users\\zhang\\WorkBuddy\\2026-10-30-18-36-40\\我的大学梦\\dsh_pipeline_test\\fresh_install\\src\\dsh-fresh-install",
+    "artifact_path": "C:\\Users\\zhang\\WorkBuddy\\2026-10-30-18-36-40\\我的大学梦\\dsh_pipeline_test\\fresh_install\\src\\dsh-fresh-install\\dist\\dsh-fresh-install-1.0.0.zip"
+  },
+  "install": {
+    "status": "pass",
+    "actions": [
+      "junction",
+      "register_dependency",
+      "register_bundle",
+      "lockfile_updated"
+    ],
+    "install_path": "C:\\Users\\zhang\\WorkBuddy\\2026-10-30-18-36-40\\我的大学梦\\dsh_pipeline_test\\fresh_install\\profiles\\isolated\\node_modules\\dsh-fresh-install",
+    "errors": [],
+    "log": [
+      "已创建目录联接（junction）",
+      "挂载成功（链接）：C:\\Users\\zhang\\WorkBuddy\\2026-10-30-18-36-40\\我的大学梦\\dsh_pipeline_test\\fresh_install\\profiles\\isolated\\node_modules\\dsh-fresh-install -> C:\\Users\\zhang\\WorkBuddy\\2026-10-30-18-36-40\\我的大学梦\\dsh_pipeline_test\\fresh_install\\src\\dsh-fresh-install",
+      "已注册 dsh-fresh-install → dependencies + dsh.profile.bundles（备份 package.json.bak-before-dsh-fresh-install）",
+      "pnpm lockfile 已同步"
+    ]
+  },
+  "observed": {
+    "dependencies": {
+      "dsh-fresh-install": "link:C:/Users/zhang/WorkBuddy/2026-10-30-18-36-40/我的大学梦/dsh_pipeline_test/fresh_install/src/dsh-fresh-install"
+    },
+    "bundles": [
+      "dsh-fresh-install"
+    ],
+    "lockfile": true,
+    "junction_name": "dsh-fresh-install"
+  },
+  "checks": {
+    "bootstrap_pass": true,
+    "install_pass": true,
+    "not_noop": true,
+    "dependency_registered": true,
+    "bundle_registered": true,
+    "lockfile_created": true,
+    "junction_resolvable": true,
+    "manifest_name_matches": true
+  },
+  "summary": {
+    "pass": 8,
+    "total": 8
+  }
+}
