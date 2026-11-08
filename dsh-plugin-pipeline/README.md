@@ -64,3 +64,7 @@ CLI 子命令：`validate` / `package` / `install` / `run` / `doctor`；所有�
 - 安装默认只读：只有显式 `run`/`install` 且指定 `--profile` 才会写入 profile。
 
 沿用仓库根目录的 MIT 许可证。
+
+## 其他人如何安装
+
+完整安装步骤（Skill 安装、插件本体安装、常见坑、各脚本可移植性）见 [INSTALL.md](./INSTALL.md)。
