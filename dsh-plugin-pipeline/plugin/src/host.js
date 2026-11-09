@@ -16,10 +16,12 @@
 //     { type:'server-response', rpcId, result } back.
 
 import { spawn } from 'node:child_process'
-import { appendFileSync } from 'node:fs'
-import { tmpdir } from 'node:os'
+import {
+  appendFileSync, existsSync, lstatSync, mkdirSync, readFileSync, readdirSync, rmSync,
+} from 'node:fs'
+import { tmpdir, homedir } from 'node:os'
 import { fileURLToPath } from 'node:url'
-import { dirname, join } from 'node:path'
+import { dirname, join, isAbsolute, resolve, sep } from 'node:path'
 
 const PLUGIN_ID = 'dsh-pipeline'
 const RPC_CHANNEL = '/dsh-pipeline'
@@ -29,7 +31,8 @@ const ROOT = join(HERE, '..')
 const CLI = join(ROOT, 'scripts', 'dsh_pipeline.py')
 const CONFIG = join(ROOT, 'assets', 'pipeline.config.json')
 
-const ENDPOINTS = ['validate', 'package', 'install', 'run', 'doctor']
+// `fetch` is handled on the Host side; the Python CLI stays purely local.
+export const ENDPOINTS = ['fetch', 'validate', 'package', 'install', 'run', 'doctor']
 
 // Runtime trace. Host-side JS is loaded once at startup and its failures are
 // swallowed by the loader's inject child fiber, so a file trace is the only
@@ -171,6 +174,178 @@ function buildArgs(endpoint, payload = {}) {
   return args
 }
 
+// ---- fetch: pull third-party plugin source from GitHub --------------------
+// The Python CLI remains offline-only. Everything that reaches spawn() is
+// validated first: no shell, no user-controlled protocol, no path traversal,
+// and an existing non-empty target is never overwritten.
+const SAFE_SEGMENT = /^[A-Za-z0-9._~-]+$/
+const SAFE_PATH = /^[A-Za-z0-9._~/-]+$/
+
+export function parseRepoUrl(input) {
+  const raw = typeof input === 'string' ? input.trim() : ''
+  if (!raw) throw new Error('缺少参数 url（GitHub 仓库地址）')
+  if (/[\s"'`$;&|<>\\]/.test(raw) || raw.includes('..')) {
+    throw new Error('仓库地址包含非法字符')
+  }
+  if (/^[a-z]+:\/\//i.test(raw) && !raw.startsWith('https://')) {
+    throw new Error('只允许 https://github.com/ 开头的仓库地址')
+  }
+  let owner, repo, ref = '', subdir = ''
+  if (raw.startsWith('https://')) {
+    let u
+    try { u = new URL(raw) } catch (_) { throw new Error('仓库地址不是合法 URL') }
+    if (u.protocol !== 'https:' || u.hostname !== 'github.com') {
+      throw new Error('只允许 https://github.com/ 开头的仓库地址')
+    }
+    const parts = u.pathname.replace(/^\/+|\/+$/g, '').split('/')
+    if (parts.length < 2 || !parts[0] || !parts[1]) throw new Error('仓库地址缺少 owner/repo')
+    owner = parts[0]
+    repo = parts[1].replace(/\.git$/, '')
+    if (parts[2] === 'tree' && parts[3]) {
+      ref = parts[3]
+      subdir = parts.slice(4).join('/')
+    }
+  } else {
+    const parts = raw.split('/')
+    if (parts.length !== 2) {
+      throw new Error('简写格式应为 owner/repo，或完整 https://github.com/owner/repo')
+    }
+    owner = parts[0]
+    repo = parts[1].replace(/\.git$/, '')
+  }
+  if (!SAFE_SEGMENT.test(owner) || !SAFE_SEGMENT.test(repo) ||
+      owner === '..' || repo === '..' || repo === '.') {
+    throw new Error('owner / repo 含非法字符')
+  }
+  if (ref && (!SAFE_PATH.test(ref) || ref.includes('..'))) {
+    throw new Error('分支或标签含非法字符')
+  }
+  if (subdir && (!SAFE_PATH.test(subdir) || subdir.includes('..') || subdir.startsWith('/'))) {
+    throw new Error('子目录含非法字符')
+  }
+  return { owner, repo, ref, subdir, cloneUrl: `https://github.com/${owner}/${repo}.git` }
+}
+
+export function resolveFetchTarget(payload, parsed, homeDir = homedir()) {
+  const p = payload && typeof payload === 'object' ? payload : {}
+  const base = p.dest ? resolve(String(p.dest)) : resolve(join(homeDir, '.dsh', 'plugin-sources'))
+  if (!isAbsolute(base)) throw new Error('保存目录必须是绝对路径')
+  if (base === resolve(homeDir) || base === sep || /^[A-Za-z]:[\\/]?$/i.test(base)) {
+    throw new Error('保存目录不能是磁盘根目录或用户主目录')
+  }
+  const target = join(base, parsed.repo)
+  if (target === base) throw new Error('目标目录无效')
+  let st = null
+  try { st = lstatSync(target) } catch (_) { st = null }
+  if (st) {
+    // Windows junctions appear here too; never write through them.
+    if (st.isSymbolicLink()) throw new Error('目标是符号链接/目录联接，拒绝写入：' + target)
+    if (!st.isDirectory()) throw new Error('目标已存在且不是目录：' + target)
+    if (readdirSync(target).length > 0) {
+      throw new Error('目标目录已存在且非空，拒绝覆盖：' + target)
+    }
+  }
+  return { base, target, src: parsed.subdir ? join(target, parsed.subdir) : target }
+}
+
+function fetchFail(code, message, extra) {
+  return {
+    status: 'fail', stage: 'fetch', stages: ['fetch'], results: [],
+    errors: [{ level: 'error', code, message }], log: [], actions: [],
+    ...(extra || {}),
+  }
+}
+
+// opts.spawnFn / opts.homeDir are injection points for offline self-tests.
+export async function runFetch(payload, opts = {}) {
+  const spawnFn = opts.spawnFn || spawn
+  const homeDir = opts.homeDir || homedir()
+  const p = payload && typeof payload === 'object' ? payload : {}
+  let parsed
+  try { parsed = parseRepoUrl(p.url) }
+  catch (e) { return fetchFail('FETCH_BAD_URL', String(e && e.message || e)) }
+
+  if (typeof p.ref === 'string' && p.ref.trim()) {
+    const r = p.ref.trim()
+    if (!SAFE_PATH.test(r) || r.includes('..')) return fetchFail('FETCH_BAD_REF', '分支或标签含非法字符')
+    parsed.ref = r
+  }
+  if (typeof p.subdir === 'string' && p.subdir.trim()) {
+    const s = p.subdir.trim().replace(/\\/g, '/').replace(/^\/+|\/+$/g, '')
+    if (!SAFE_PATH.test(s) || s.includes('..')) return fetchFail('FETCH_BAD_SUBDIR', '子目录含非法字符')
+    parsed.subdir = s
+  }
+
+  let paths
+  try { paths = resolveFetchTarget(p, parsed, homeDir) }
+  catch (e) { return fetchFail('FETCH_DEST_INVALID', String(e && e.message || e)) }
+
+  const args = ['clone', '--depth', '1']
+  if (parsed.ref) args.push('--branch', parsed.ref)
+  args.push(parsed.cloneUrl, paths.target)
+
+  try {
+    if (existsSync(paths.target)) rmSync(paths.target, { recursive: true, force: true })
+    mkdirSync(paths.base, { recursive: true })
+  } catch (e) {
+    return fetchFail('FETCH_DEST_IO', '准备目录失败：' + String(e && e.message || e))
+  }
+
+  const run = await new Promise((done) => {
+    let stdout = '', stderr = ''
+    let child
+    try {
+      child = spawnFn('git', args, {
+        windowsHide: true,
+        env: { ...process.env, GIT_TERMINAL_PROMPT: '0' },
+        timeout: 120000,
+      })
+    } catch (e) {
+      done({ code: -1, stderr: String(e && e.message || e), stdout }); return
+    }
+    if (child.stdout) child.stdout.on('data', (d) => { stdout += d.toString('utf8') })
+    if (child.stderr) child.stderr.on('data', (d) => { stderr += d.toString('utf8') })
+    child.on('error', (e) => done({ code: -1, stdout, stderr: String(e && e.message || e) }))
+    child.on('close', (code) => done({ code, stdout, stderr }))
+  })
+  if (run.code !== 0) {
+    return fetchFail('FETCH_CLONE_FAILED',
+      `git clone 失败（退出码 ${run.code}）：${(run.stderr || '').trim().slice(-800)}`,
+      { target: paths.target, url: parsed.cloneUrl })
+  }
+
+  const errors = []
+  let name = null, version = null, manifest = null
+  if (!existsSync(paths.src)) {
+    errors.push({ level: 'warn', code: 'FETCH_SUBDIR_MISSING',
+                  message: '子目录不存在，请确认 subdir：' + paths.src })
+  } else {
+    const manifestPath = join(paths.src, 'package.json')
+    if (!existsSync(manifestPath)) {
+      errors.push({ level: 'warn', code: 'FETCH_NO_MANIFEST',
+                    message: '该目录没有 package.json；插件在子目录时请填写子目录' })
+    } else {
+      try {
+        const j = JSON.parse(readFileSync(manifestPath, 'utf8'))
+        name = j.name || null
+        version = j.version || null
+        manifest = manifestPath
+      } catch (e) {
+        errors.push({ level: 'warn', code: 'FETCH_BAD_MANIFEST',
+                      message: 'package.json 无法解析：' + String(e && e.message || e) })
+      }
+    }
+  }
+  return {
+    status: errors.length ? 'warn' : 'pass',
+    stage: 'fetch', stages: ['fetch'], results: [], errors,
+    log: ['git clone --depth 1 ' + parsed.cloneUrl, '目标目录：' + paths.target],
+    actions: ['clone'],
+    url: parsed.cloneUrl, ref: parsed.ref || null, subdir: parsed.subdir || null,
+    target: paths.target, src: paths.src, manifest, name, version,
+  }
+}
+
 export function makeHandler() {
   return async function handler(endpoint, payload) {
     if (!ENDPOINTS.includes(endpoint)) {
@@ -181,6 +356,19 @@ export function makeHandler() {
           message: `unknown endpoint: ${endpoint}`,
           details: {},
         },
+      }
+    }
+    if (endpoint === 'fetch') {
+      try {
+        return { ok: true, value: await runFetch(payload) }
+      } catch (e) {
+        return {
+          ok: false,
+          error: {
+            code: 'dsh-pipeline/fetch-failure',
+            message: String(e && e.message || e), details: {},
+          },
+        }
       }
     }
     try {

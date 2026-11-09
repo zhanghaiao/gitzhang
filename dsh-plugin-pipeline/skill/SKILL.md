@@ -156,11 +156,15 @@ Client 侧资源可热加载（面板文字会更新），但 Host 的 RPC 注�
    `{type:'server-response',rpcId,result}`），当 `connection` 不可用或
    `rpc.handle()` 抛错时兜底注册。这是「面板可见但一直 405」的最终防线。
 
-本插件使用 `/dsh-pipeline`，endpoint 为 `validate/package/install/run/doctor`。
+本插件使用 `/dsh-pipeline`，endpoint 为
+`fetch/validate/package/install/run/doctor`。`fetch` 由 Host 侧直接执行
+`git clone --depth 1` 拉取 GitHub 仓库，只接受 `https://github.com/` 白名单地址，
+拒绝注入字符与路径穿越，目标非空或为目录联接时拒绝覆盖；源码默认落到
+`~/.dsh/plugin-sources/<repo>`，Python CLI 保持纯本地、不联网。
 `src/host.js` 在模块加载、`apply()`、两条注册路径处写入运行时日志
 （`os.tmpdir()/dsh-pipeline-host-trace.log`），可用 `scripts/probe_live_route.py`
 在**不点 UI** 的情况下直接探测真实宿主进程：静态 fallback 对 POST 返回 405，
-路由注册后则返回 401/200。`scripts/selftest.mjs`（13 项）、`smoke_test.py` 的
+路由注册后则返回 401/200。`scripts/selftest.mjs`（22 项）、`smoke_test.py` 的
 T12 与 `scripts/rpc_route_test.mjs`（真实 `HostConnectionService` 挂载后发真实 POST）
 均对上述契约做了断言。
 

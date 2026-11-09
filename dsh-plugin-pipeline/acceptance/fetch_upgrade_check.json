@@ -1,0 +1,87 @@
+{
+  "purpose": "fetch 面板能力升级 · 离线客观验证（不依赖 GitHub 网络）",
+  "tests": {
+    "selftest": {
+      "exit": 0,
+      "items": 22
+    },
+    "rpc_route_test": {
+      "total": 5,
+      "pass": 5,
+      "fail": 0
+    },
+    "syntax": {
+      "host_js": "OK",
+      "client_js": "OK"
+    },
+    "ui_elements": {
+      "found": 12,
+      "total": 12
+    },
+    "cli_validate": {
+      "status": "pass",
+      "name": "dsh-pipeline",
+      "version": "1.0.0"
+    },
+    "template_sync": {
+      "status": "pass",
+      "summary": {
+        "same": 8,
+        "total": 8
+      }
+    },
+    "bootstrap": {
+      "status": "pass",
+      "checks": {
+        "manifest.name": true,
+        "patch.id": true,
+        "patch.name": true,
+        "host.channel": true,
+        "client.channel": true,
+        "no-stale-id": true
+      },
+      "files": 8
+    },
+    "generated_selftest": {
+      "exit": 0,
+      "items": 22
+    },
+    "plugin_artifact": {
+      "bytes": 29940,
+      "members": 8,
+      "crc_bad": null
+    },
+    "skill_artifact": {
+      "bytes": 98610,
+      "members": 20,
+      "crc_bad": null
+    },
+    "manual_acceptance_after": {
+      "stdout_tail": [
+        "结论：FAIL  (pass=6 warn=0 fail=1 skip=0)",
+        "下一步：按失败项排查；最常见原因是宿主未重启（C1）或未在 UI 点打包（C6）。",
+        "报告：C:\\Users\\zhang\\WorkBuddy\\2026-10-30-18-36-40\\我的大学梦\\dsh_pipeline_test\\acceptance\\acceptance_check_after.json"
+      ],
+      "C1": "FAIL",
+      "C5": "PASS",
+      "C5_detail": "18 项全通过",
+      "note": "修改 host.js 后宿主尚未重启，C1 预期为 FAIL；C5 契约检查应全通过"
+    }
+  },
+  "checks": {
+    "selftest_22": true,
+    "rpc_5_of_5": true,
+    "syntax_ok": true,
+    "ui_complete": true,
+    "validate_pass": true,
+    "template_8_of_8": true,
+    "bootstrap_pass": true,
+    "generated_selftest_22": true,
+    "artifacts_crc_ok": true,
+    "C5_pass": true
+  },
+  "summary": {
+    "pass": 10,
+    "total": 10
+  }
+}

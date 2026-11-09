@@ -93,7 +93,7 @@ Windows 把 `python3` 换成 `python`。看到 `"status": "pass"` 且 `checks` �
 
 ```bash
 cd my-plugins/dsh-demo && node scripts/selftest.mjs
-# 期望输出：自检通过：13 项
+# 期望输出：自检通过：22 项
 ```
 
 ### 1.4 使用
@@ -138,9 +138,29 @@ python3 $SKILL/scripts/dsh_pipeline.py install \
 
 首次安装成功后 `actions` 应包含 `junction` / `register_dependency` / `register_bundle` / `lockfile_updated`；重复安装返回 `actions: ["noop"]`，表示挂载一致、无需重写，**不是失败**。
 
-然后 **完全退出 DSH 进程再重新启动**（只刷新页面无效，slot 与 Host 侧 JS 只在启动时加载）。启动后在侧栏找到 `↑` 图标，第一个输入框填**插件源码目录**（含 `package.json` 的目录），第二个填 profile，点「一键上线」。
+然后 **完全退出 DSH 进程再重新启动**（只刷新页面无效，slot 与 Host 侧 JS 只在启动时加载）。启动后在侧栏找到 `↑` 图标打开面板，填写「插件源码目录」（含 `package.json` 的目录）与「目标 profile」，点「一键上线」。
 
 成功返回的 JSON 应满足：`status: pass`、`errors: []`、`stages: [validate, package, install]`。
+
+### 2.1 用面板直接拉取别人的插件源码
+
+面板顶部另有三个输入框和一个「拉取源码」按钮，用于从 GitHub 取第三方插件：
+
+| 输入框 | 填什么 |
+|---|---|
+| GitHub 仓库地址 | `https://github.com/owner/repo` 或简写 `owner/repo` |
+| 分支 / 标签（可选） | `main`、`v1.2.3`；留空用仓库默认分支 |
+| 插件子目录（可选） | monorepo 中含 `package.json` 的那一层，如 `packages/my-plugin` |
+
+点「拉取源码」→ 结果 JSON 中的 `src` 会自动回填到「插件源码目录」→ 再点「一键上线」。
+
+默认保存到 `~/.dsh/plugin-sources/<repo>`；只接受 `https://github.com/` 地址，
+执行 `git clone --depth 1`（参数数组、无 shell、120 秒超时），目标目录非空或为
+目录联接时拒绝覆盖。需要本机装有 `git` 且网络可达。若返回
+`FETCH_CLONE_FAILED`（常见于网络/证书受限），改用第 1 节的下载方式把源码放到本地，
+再把目录填进「插件源码目录」即可。
+
+> 修改 `src/host.js` 或 `src/client.js` 后必须**完全退出并重启 DSH** 才会加载新按钮。
 
 ---
 
@@ -159,7 +179,7 @@ python3 $SKILL/scripts/dsh_pipeline.py install \
 
 ## 4. 各脚本在别人机器上的可用性
 
-已在干净目录里实测：解压 zip → `bootstrap_plugin.py --chain validate` → `status: pass` → 生成目录 `node scripts/selftest.mjs` → 13/13 通过。核心链路完全可移植。
+已在干净目录里实测：解压 zip → `bootstrap_plugin.py --chain validate` → `status: pass` → 生成目录 `node scripts/selftest.mjs` → 22/22 通过。核心链路完全可移植。
 
 | 脚本 | 别人直接跑 | 说明 |
 |---|---|---|

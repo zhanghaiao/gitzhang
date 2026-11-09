@@ -2,7 +2,11 @@
 // 运行：node ./scripts/selftest.mjs
 
 import assert from 'node:assert/strict'
+import { EventEmitter } from 'node:events'
 import { Readable } from 'node:stream'
+import { existsSync, mkdtempSync, mkdirSync, rmSync, writeFileSync } from 'node:fs'
+import { join } from 'node:path'
+import { tmpdir } from 'node:os'
 
 let passed = 0
 function step(name) { passed++; console.log('  ✓ ' + name) }
@@ -168,5 +172,112 @@ assert.equal(merged.status, 'pass')
 assert.deepEqual(merged.stages, ['validate', 'package', 'install'])
 assert.equal(merged.artifact_path, 'demo.zip')
 step('Host 能解析并合并旧版 CLI 的多段 JSON 输出')
+
+// 8. fetch：从 GitHub 拉取源码（注入 spawn，全程离线、不联网）
+const fetchHome = mkdtempSync(join(tmpdir(), 'dsh-fetch-selftest-'))
+const calls = []
+function fakeGit(behaviour) {
+  return function (cmd, args, options) {
+    calls.push({ cmd, args, options })
+    const child = new EventEmitter()
+    child.stdout = new Readable({ read() {} })
+    child.stderr = new Readable({ read() {} })
+    process.nextTick(() => {
+      if (behaviour.create !== false) {
+        const dir = join(args[args.length - 1], behaviour.subdir || '')
+        mkdirSync(dir, { recursive: true })
+        writeFileSync(join(dir, 'package.json'),
+          JSON.stringify({ name: behaviour.name || 'demo-plugin', version: '1.2.3' }))
+      }
+      // 真实子进程在 stdio 流结束后才触发 close；桩里先 emit data 再 close。
+      if (behaviour.stderr) child.stderr.emit('data', Buffer.from(behaviour.stderr))
+      child.emit('close', behaviour.code === undefined ? 0 : behaviour.code)
+    })
+    return child
+  }
+}
+try {
+  assert.equal(host.ENDPOINTS[0], 'fetch')
+  for (const e of ['validate', 'package', 'install', 'run', 'doctor']) {
+    assert.ok(host.ENDPOINTS.includes(e), '原有 endpoint 必须保留：' + e)
+  }
+  step('fetch endpoint 已注册，原有 5 个 endpoint 全部保留')
+
+  assert.equal(host.parseRepoUrl('https://github.com/o/r').cloneUrl, 'https://github.com/o/r.git')
+  assert.equal(host.parseRepoUrl('o/r.git').repo, 'r')
+  const tree = host.parseRepoUrl('https://github.com/o/r/tree/v1.2.3/packages/my-plugin')
+  assert.equal(tree.ref, 'v1.2.3')
+  assert.equal(tree.subdir, 'packages/my-plugin')
+  step('parseRepoUrl 支持完整地址 / 简写 / tree 子目录')
+
+  for (const bad of ['', 'http://github.com/o/r', 'https://evil.com/o/r',
+                     'o/r; rm -rf /', 'https://github.com/o/r/tree/../../etc',
+                     'git@github.com:o/r.git', 'o/../r']) {
+    assert.throws(() => host.parseRepoUrl(bad))
+  }
+  step('parseRepoUrl 拒绝非 GitHub / 非 https / 注入字符 / 路径穿越')
+
+  const ok = await host.runFetch({ url: 'https://github.com/o/r' },
+    { spawnFn: fakeGit({}), homeDir: fetchHome })
+  assert.equal(ok.status, 'pass')
+  assert.equal(ok.stage, 'fetch')
+  assert.equal(ok.name, 'demo-plugin')
+  assert.equal(ok.version, '1.2.3')
+  assert.deepEqual(ok.actions, ['clone'])
+  assert.ok(ok.src.endsWith('r'))
+  assert.equal(calls[0].cmd, 'git')
+  assert.ok(calls[0].args.includes('--depth') && calls[0].args.includes('1'))
+  assert.ok(calls[0].args.includes('https://github.com/o/r.git'))
+  assert.equal(calls[0].options.env.GIT_TERMINAL_PROMPT, '0')
+  step('fetch 成功：结构化结果 + 无 shell 的 git clone 参数')
+
+  const withSub = await host.runFetch(
+    { url: 'o/r-subdir', ref: 'v2.0.0', subdir: 'packages/my-plugin' },
+    { spawnFn: fakeGit({ subdir: 'packages/my-plugin' }), homeDir: fetchHome })
+  assert.equal(withSub.status, 'pass')
+  assert.ok(withSub.src.endsWith(join('r-subdir', 'packages', 'my-plugin')))
+  assert.equal(withSub.ref, 'v2.0.0')
+  assert.ok(calls[calls.length - 1].args.includes('--branch'))
+  step('fetch 支持分支 / 标签与 monorepo 子目录')
+
+  const badClone = await host.runFetch({ url: 'o/r2' },
+    { spawnFn: fakeGit({ code: 128, stderr: 'fatal: repository not found', create: false }),
+      homeDir: fetchHome })
+  assert.equal(badClone.status, 'fail')
+  assert.equal(badClone.errors[0].code, 'FETCH_CLONE_FAILED')
+  assert.match(badClone.errors[0].message, /repository not found/)
+  step('git clone 失败转为可读的结构化 fail')
+
+  const occupied = join(fetchHome, '.dsh', 'plugin-sources', 'occupied')
+  mkdirSync(occupied, { recursive: true })
+  writeFileSync(join(occupied, 'keep.txt'), 'do not delete')
+  const before = calls.length
+  const guarded = await host.runFetch({ url: 'o/occupied' },
+    { spawnFn: fakeGit({}), homeDir: fetchHome })
+  assert.equal(guarded.status, 'fail')
+  assert.equal(guarded.errors[0].code, 'FETCH_DEST_INVALID')
+  assert.equal(calls.length, before, '目标非空时不得调用 git')
+  assert.equal(existsSync(join(occupied, 'keep.txt')), true, '既有文件必须保留')
+  step('目标目录非空时拒绝覆盖，且不删除既有文件')
+
+  const env = await host.makeHandler()('fetch', {})
+  assert.equal(env.ok, true)
+  assert.equal(env.value.stage, 'fetch')
+  assert.equal(env.value.status, 'fail')
+  assert.equal(env.value.errors[0].code, 'FETCH_BAD_URL')
+  step('fetch 走标准 { ok, value } 信封，业务失败不触发 HTTP 500')
+
+  const fetchRes = fakeRes()
+  await fallback(fakeReq(`${host.RPC_CHANNEL}/fetch`,
+    { type: 'client-request', rpcId: 'probe-fetch', method: 'fetch', payload: {} }), fetchRes)
+  const fetchWire = JSON.parse(fetchRes.state.body)
+  assert.equal(fetchRes.state.status, 200)
+  assert.equal(fetchWire.type, 'server-response')
+  assert.equal(fetchWire.result.ok, true)
+  assert.equal(fetchWire.result.value.stage, 'fetch')
+  step('兜底路由 /dsh-pipeline/fetch 可分发并返回信封')
+} finally {
+  rmSync(fetchHome, { recursive: true, force: true })
+}
 
 console.log(`\n自检通过：${passed} 项`)

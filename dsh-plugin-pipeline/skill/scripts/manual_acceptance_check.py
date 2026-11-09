@@ -229,6 +229,17 @@ def main():
         "Python 解释器多重回退": "i + 1 < candidates.length" in host_txt
                                 and "'py'" in host_txt,
         "bundle patch id 一致": "id: dsh-pipeline" in patch_txt,
+        "fetch endpoint 已注册": "'fetch'" in host_txt
+                                 and "ENDPOINTS.includes(endpoint)" in host_txt
+                                 and "key: 'fetch'" in client_txt,
+        "fetch 限 GitHub https": "u.hostname !== 'github.com'" in host_txt
+                                 and "parseRepoUrl" in host_txt
+                                 and "raw.includes('..')" in host_txt,
+        "fetch 无 shell 且防覆盖": "spawnFn('git', args" in host_txt
+                                   and "拒绝覆盖" in host_txt
+                                   and "isSymbolicLink()" in host_txt,
+        "Client 拉取后自动回填": "setSrc(r.src)" in client_txt
+                                 and "action === 'fetch'" in client_txt,
     }
     bad = [k for k, v in checks.items() if not v]
     rows.append(case("C5", "代码与契约一致性", "PASS" if not bad else "FAIL",
