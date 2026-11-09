@@ -9,6 +9,8 @@
 
 大多数人只需要第一个。两个都装也可以，互不冲突。
 
+> 装好之后**怎么用面板**（六个按钮、结果字段、错误码、典型工作流）见 [USAGE.md](./USAGE.md) 使用手册；本文只负责安装。
+
 > 注意：这是 `gitzhang` 仓库里的一个**子目录**，仓库根目录属于另一个插件 `dsh-sleep-tracker`。不要把整个仓库根当成 Skill 目录使用。
 
 ---
@@ -161,6 +163,7 @@ python3 $SKILL/scripts/dsh_pipeline.py install \
 再把目录填进「插件源码目录」即可。
 
 > 修改 `src/host.js` 或 `src/client.js` 后必须**完全退出并重启 DSH** 才会加载新按钮。
+> 六个按钮的完整用法与排障决策见 [USAGE.md](./USAGE.md)。
 
 ---
 

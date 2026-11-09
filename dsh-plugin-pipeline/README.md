@@ -13,6 +13,7 @@
 | `acceptance/` | 8 份客观证据报告：基线、验收前后核对、按钮判据、全新安装、分发包验证、fetch 升级验证、最终归档版手动验收清单 |
 | `dist/dsh-plugin-pipeline.skill.zip` | 可分发的 Skill 压缩包（解压到 `~/.workbuddy/skills/` 即可跨设备使用） |
 | `INSTALL.md` | 给其他人的完整安装说明 |
+| `USAGE.md` | 面板使用手册：六个操作、结果字段、错误码、典型工作流 |
 
 ## 从 GitHub 拉取别人的插件源码
 
@@ -88,8 +89,9 @@ CLI 子命令：`validate` / `package` / `install` / `run` / `doctor`；所有�
 - 安装默认只读：只有显式 `run`/`install` 且指定 `--profile` 才会写入 profile。
 - `fetch` 依赖本机 `git` 与网络；离线环境可先在别处下载源码，再把本地目录填进面板。
 
-## 其他人如何安装
+## 其他人如何安装与使用
 
-完整安装步骤（Skill 安装、插件本体安装、常见坑、各脚本可移植性）见 [INSTALL.md](./INSTALL.md)。
+- 安装步骤（Skill 安装、插件本体安装、常见坑、各脚本可移植性）：[INSTALL.md](./INSTALL.md)
+- 面板使用手册（六个按钮、结果 JSON 字段字典、错误码速查、四个典型工作流）：[USAGE.md](./USAGE.md)
 
 沿用仓库根目录的 MIT 许可证。
